@@ -1,56 +1,107 @@
 // Modules to control application life and create native browser window
-const {app, BrowserWindow} = require('electron')
+const { app, BrowserWindow, ipcMain, Notification } = require("electron");
 
-// Keep a global reference of the window object, if you don't, the window will
-// be closed automatically when the JavaScript object is garbage collected.
-let mainWindow
+const path = require("path");
+const url = require("url");
+const notifier = require('node-notifier');
 
-function createWindow () {
-  // Create the browser window.
-  mainWindow = new BrowserWindow({
-    width: 800,
-    height: 600,
-    webPreferences: {
-      nodeIntegration: true
-    }
-  })
+let win;
 
-  // and load the index.html of the app.
-  mainWindow.loadFile('index.html')
+function createWindow() {
+    // Create the browser window.
+    win = new BrowserWindow({ width: 800, height: 600,title: "TEST", icon:'./facebook.png'});
 
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools()
+    // and load the index.html of the app.
+    win.loadURL(
+        url.format({
+            pathname: path.join(__dirname, "index.html"),
+            protocol: "file:",
+            slashes: true
+        })
+    );
 
-  // Emitted when the window is closed.
-  mainWindow.on('closed', function () {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null
-  })
+    // Open the DevTools.
+     win.webContents.openDevTools()
+
+    // Emitted when the window is closed.
+    win.on("closed", () => {
+        // Dereference the window object, usually you would store windows
+        // in an array if your app supports multi windows, this is the time
+        // when you should delete the corresponding element.
+        win = null;
+});
 }
 
-// This method will be called when Electron has finished
-// initialization and is ready to create browser windows.
-// Some APIs can only be used after this event occurs.
-app.on('ready', createWindow)
+//const appId = "elite-notifier";
 
-// Quit when all windows are closed.
-app.on('window-all-closed', function () {
-  // On macOS it is common for applications and their menu bar
-  // to stay active until the user quits explicitly with Cmd + Q
-  if (process.platform !== 'darwin') {
-    app.quit()
-  }
-})
+//app.setAppUserModelId(appId);
+app.on("ready", createWindow);
 
-app.on('activate', function () {
-  // On macOS it's common to re-create a window in the app when the
-  // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
-    createWindow()
-  }
-})
+console.log("notifying");
+ipcMain.on("notify", () => {
+    console.log("notified");
+// const WindowsToaster = require("node-notifier").WindowsToaster;
+// const notifier = new WindowsToaster({
+//     withFallback: false
+// });
 
-// In this file you can include the rest of your app's specific main process
-// code. You can also put them in separate files and require them here.
+
+notifier.notify(
+    {
+        appName: "com.myapp.id",
+        title  : "Hello",
+        message: "Hello world!",
+        icon   : "./facebook.png"
+    },
+    function (err, response) {
+        // Response is response from notification
+        console.log("responded...");
+    }
+);
+});
+
+const notifier = require('node-notifier');
+const dns = require('dns');
+let isConnected = false;
+
+//인터넷 연결 확인 함수
+function liveCheck() {
+    //구글로 연결을 시도해 인터넷 연결 확인
+    dns.resolve("www.google.com", function(err, addr) {
+        //연결이 안될때
+        if (err) {
+            if (isConnected) {
+                notifier.notify({
+                    appName: "com.myapp.id",
+                    title: "network error",
+                    message: "disconnected",
+                    icon: "./facebook.png",
+                });
+            }
+            isConnected = false;
+        }
+        //연결됬을때
+        else {
+            if (isConnected) {
+                //connection is still up and running, do nothing
+            } else {
+             //   console.log(addr);
+                notifier.notify({
+                    appName: "com.myapp.id",
+                    title: "connection gained",
+                    message: "connected",
+                    icon: "./facebook.png"
+                });
+            }
+            isConnected = true;
+        }
+    });
+}
+
+
+
+//1초마다 인터넷 연결 확인 함수 호출
+setInterval(function() {
+    liveCheck()
+     },1000);
+

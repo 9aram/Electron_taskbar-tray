@@ -1,19 +1,50 @@
 <!DOCTYPE html>
 <html>
-  <head>
+
+<head>
     <meta charset="UTF-8">
     <title>Hello World!</title>
-  </head>
-  <body>
-    <h1>Hello World!</h1>
-    <!-- All of the Node.js APIs are available in this renderer process. -->
-    We are using Node.js <script>document.write(process.versions.node)</script>,
-    Chromium <script>document.write(process.versions.chrome)</script>,
-    and Electron <script>document.write(process.versions.electron)</script>.
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <meta name="google-signin-client_id" content="1067161273424-gud6khml7r3bssi35u2rj5lchepj25bo.apps.googleusercontent.com">
+</head>
 
-    <script>
-      // You can also require other files to run in this process
-      require('./renderer.js')
-    </script>
-  </body>
+<body>
+
+<div class="g-signin2" data-onsuccess="onSignIn"></div>
+
+<h1>Notifier!</h1>
+<button type="button" id="notify">Click here to trigger a notification!</button>
+<script type="text/javascript">
+
+
+    const { ipcRenderer } = require('electron');
+
+    const button = document.getElementById('notify');
+    console.log('BUTTON: ', button)
+    button.addEventListener('click', function(event) {
+        console.log('clicked...');
+        ipcRenderer.send('notify')
+
+    });
+
+
+function call() {
+    const notifier = require("node-notifier");
+    notifier.notify({
+        appName: "com.myapp.id",
+        message: "This is the body of the notification.",
+        title: "This will be the title of the notification",
+        icon:"./facebook.png",
+        // Wait with callback (onClick event of the toast), until user action is taken against notification
+        //wait:true
+    });
+}
+
+
+
+</script>
+<button type="button" onclick="call();" >js notification!</button>
+
+</body>
+
 </html>
